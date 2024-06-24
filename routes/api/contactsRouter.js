@@ -6,7 +6,7 @@ import { authenticateToken } from "../../middlewares/authenticateToken.js";
 
 const router = express.Router();
 
-router.get("/", ctrlWrapper(getAllContacts));
+router.get("/",authenticateToken, ctrlWrapper(getAllContacts));
 
 router.get("/:contactId", authenticateToken, ctrlWrapper(getContactById));
 
