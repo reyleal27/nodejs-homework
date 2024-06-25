@@ -17,11 +17,12 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static("public"));
 
 //http://localhost:3000/api/users
+app.use("/api/contacts", contactsRouter)
 app.use("/api/users", usersRouter)
 
-app.use("/api/contacts", contactsRouter)
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Not found' })

@@ -1,12 +1,18 @@
 import bcrypt from "bcrypt";
+import gravatar from "gravatar";
 import jwt from "jsonwebtoken";
-// import "dotenv/config";
-import dotenv from "dotenv";
-import { httpError } from "../helper/httpError.js";
+import "dotenv/config";
+import Jimp from "jimp";
+// import dotenv from "dotenv";
+import path from "path";
+import fs from "fs/promises";
 import { User } from "../models/usersModel.js";
 import { signupValidation, subscriptionValidation } from "../validation/validation.js";
+import { httpError } from "../helper/httpError.js";
 
-dotenv.config();
+
+
+// dotenv.config();
 const { SECRET_KEY } = process.env;
 
 const signupUser = async (req, res) => {
@@ -23,14 +29,21 @@ const signupUser = async (req, res) => {
     }
     
     const hashPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ email, password: hashPassword });
+    
+    const avatarURL = gravatar.url(email, { protocol: "http" });
+
+    const newUser = await User.create({
+        email, password: hashPassword,
+        avatarURL,
+    });
 
     res.status(201).json({
         user: {
             email: newUser.email,
             subscription: newUser.subscription,
+            avatarURL: newUser.avatarURL,
         }
-    });
+     });
 };
 
 const loginUser = async (req, res) => {
@@ -97,6 +110,28 @@ const updateUserSubscription = async (req, res) => {
         email: updatedUser.email,
         subscription: updatedUser.subscription,
     })
-}
+};
 
-export { signupUser, loginUser, logoutUser, getCurrentUsers, updateUserSubscription };
+const updateAvatar = async (req, res) => {
+    const { _id } = req.user;
+    const { path: oldPath, originalname } = req.file;
+
+    await Jimp.read(oldPath).then((image) =>
+        image.cover(250, 250).write(oldPath)
+    );
+
+    const extension = path.extname(originalname);
+
+    const filename = `${_id}${extension}`;
+
+    const newPath = path.join("public", "avatar", filename);
+    await fs.rename(oldPath, newPath);
+
+    let avatarURL = path.join("/avatars", filename);
+    avatarURL = avatarURL.replace(/\\/g, "/");
+
+    await User.findByIdAndUpdate(_id, { avatarURL });
+    res.status(200).json({ avatarURL });
+};
+
+export { signupUser, loginUser, logoutUser, getCurrentUsers, updateUserSubscription, updateAvatar };
