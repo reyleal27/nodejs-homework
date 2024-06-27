@@ -113,25 +113,24 @@ const updateUserSubscription = async (req, res) => {
 };
 
 const updateAvatar = async (req, res) => {
-    const { _id } = req.user;
-    const { path: oldPath, originalname } = req.file;
+  const { _id } = req.user;
+  const { path: oldPath, originalname } = req.file;
 
-    await Jimp.read(oldPath).then((image) =>
-        image.cover(250, 250).write(oldPath)
-    );
+  await Jimp.read(oldPath).then((image) =>
+    image.cover(250, 250).write(oldPath)
+  );
 
-    const extension = path.extname(originalname);
+  const extension = path.extname(originalname);
 
-    const filename = `${_id}${extension}`;
+  const filename = `${_id}${extension}`;
+  const newPath = path.join("public", "avatars", filename);
+  await fs.rename(oldPath, newPath);
 
-    const newPath = path.join("public", "avatar", filename);
-    await fs.rename(oldPath, newPath);
+  let avatarURL = path.join("/avatars", filename);
+  avatarURL = avatarURL.replace(/\\/g, "/");
 
-    let avatarURL = path.join("/avatars", filename);
-    avatarURL = avatarURL.replace(/\\/g, "/");
-
-    await User.findByIdAndUpdate(_id, { avatarURL });
-    res.status(200).json({ avatarURL });
+  await User.findByIdAndUpdate(_id, { avatarURL });
+  res.status(200).json({ avatarURL });
 };
 
 export { signupUser, loginUser, logoutUser, getCurrentUsers, updateUserSubscription, updateAvatar };
