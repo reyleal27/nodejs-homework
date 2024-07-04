@@ -30,5 +30,15 @@ const favoriteValidation = Joi.object({
     favorite: Joi.boolean().required(),
 })
 
+const emailValidation = Joi.object({
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+    .required()
+    .messages({
+      "any.required": "Missing required email field",
+      "string.email": "Invalid email format",
+    }),
+});
 
-export { signupValidation, contactValidation, favoriteValidation,subscriptionValidation };
+
+export { signupValidation, contactValidation, favoriteValidation,subscriptionValidation, emailValidation};
